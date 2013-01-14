@@ -475,8 +475,7 @@ static PyGetSetDef block_object_getset[] = {
 };
 
 PyTypeObject block_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+  PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Block",			  /*tp_name*/
   sizeof (block_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/
@@ -495,7 +494,7 @@ PyTypeObject block_object_type = {
   0,				  /*tp_getattro*/
   0,				  /*tp_setattro*/
   0,				  /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,  /*tp_flags*/
+  Py_TPFLAGS_DEFAULT,  /*tp_flags*/
   "GDB block object",		  /* tp_doc */
   0,				  /* tp_traverse */
   0,				  /* tp_clear */
@@ -516,8 +515,7 @@ Return true if this block iterator is valid, false if not." },
 };
 
 static PyTypeObject block_syms_iterator_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.BlockIterator",		  /*tp_name*/
   sizeof (block_syms_iterator_object),	      /*tp_basicsize*/
   0,				  /*tp_itemsize*/
@@ -536,7 +534,7 @@ static PyTypeObject block_syms_iterator_object_type = {
   0,				  /*tp_getattro*/
   0,				  /*tp_setattro*/
   0,				  /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,  /*tp_flags*/
+  Py_TPFLAGS_DEFAULT,  /*tp_flags*/
   "GDB block syms iterator object",	      /*tp_doc */
   0,				  /*tp_traverse */
   0,				  /*tp_clear */

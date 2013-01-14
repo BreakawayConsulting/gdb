@@ -47,7 +47,7 @@ objfpy_get_filename (PyObject *self, void *closure)
   objfile_object *obj = (objfile_object *) self;
 
   if (obj->objfile)
-    return PyString_Decode (obj->objfile->name, strlen (obj->objfile->name),
+    return PyUnicode_Decode (obj->objfile->name, strlen (obj->objfile->name),
 			    host_charset (), NULL);
   Py_RETURN_NONE;
 }
@@ -58,7 +58,7 @@ objfpy_dealloc (PyObject *o)
   objfile_object *self = (objfile_object *) o;
 
   Py_XDECREF (self->printers);
-  self->ob_type->tp_free ((PyObject *) self);
+  Py_TYPE(self)->tp_free ((PyObject *) self);
 }
 
 static PyObject *
@@ -215,8 +215,7 @@ static PyGetSetDef objfile_getset[] =
 
 static PyTypeObject objfile_object_type =
 {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Objfile",		  /*tp_name*/
   sizeof (objfile_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/

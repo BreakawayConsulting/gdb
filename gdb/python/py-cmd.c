@@ -274,7 +274,7 @@ cmdpy_completer (struct cmd_list_element *command, char *text, char *word)
 	  VEC_safe_push (char_ptr, result, item);
 	}
     }
-  else if (PyInt_Check (resultobj))
+  else if (PyLong_Check (resultobj))
     {
       /* User code may also return one of the completion constants,
 	 thus requesting that sort of completion.  */
@@ -298,14 +298,14 @@ cmdpy_completer (struct cmd_list_element *command, char *text, char *word)
 
 /* Helper for cmdpy_init which locates the command list to use and
    pulls out the command name.
-   
+
    NAME is the command name list.  The final word in the list is the
    name of the new command.  All earlier words must be existing prefix
    commands.
 
    *BASE_LIST is set to the final prefix command's list of
    *sub-commands.
-   
+
    START_LIST is the list in which the search starts.
 
    This function returns the xmalloc()d name of the new command.  On
@@ -453,16 +453,16 @@ cmdpy_init (PyObject *self, PyObject *args, PyObject *kw)
     return -1;
 
   pfx_name = NULL;
-  if (is_prefix != NULL) 
+  if (is_prefix != NULL)
     {
       cmp = PyObject_IsTrue (is_prefix);
       if (cmp == 1)
 	{
 	  int i, out;
-	  
+
 	  /* Make a normalized form of the command name.  */
 	  pfx_name = xmalloc (strlen (name) + 2);
-	  
+
 	  i = 0;
 	  out = 0;
 	  while (name[i])
@@ -591,8 +591,8 @@ gdbpy_initialize_commands (void)
   PyModule_AddObject (gdb_module, "Command",
 		      (PyObject *) &cmdpy_object_type);
 
-  invoke_cst = PyString_FromString ("invoke");
-  complete_cst = PyString_FromString ("complete");
+  invoke_cst = PyUnicode_FromString ("invoke");
+  complete_cst = PyUnicode_FromString ("complete");
 }
 
 
@@ -607,8 +607,7 @@ static PyMethodDef cmdpy_object_methods[] =
 
 static PyTypeObject cmdpy_object_type =
 {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Command",		  /*tp_name*/
   sizeof (cmdpy_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/
@@ -678,7 +677,7 @@ gdbpy_string_to_argv (PyObject *self, PyObject *args)
 
       for (i = 0; c_argv[i] != NULL; ++i)
 	{
-	  PyObject *argp = PyString_FromString (c_argv[i]);
+	  PyObject *argp = PyUnicode_FromString (c_argv[i]);
 
 	  if (argp == NULL
 	      || PyList_Append (py_argv, argp) < 0)

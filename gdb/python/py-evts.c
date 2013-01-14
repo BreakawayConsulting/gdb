@@ -20,6 +20,17 @@
 #include "py-events.h"
 
 /* Initialize python events.  */
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "events",
+        NULL,
+        0, //sizeof(struct module_state),
+        NULL,
+        NULL,
+	NULL,
+	NULL,
+        NULL
+};
 
 static int
 add_new_registry (eventregistry_object **registryp, char *name)
@@ -44,7 +55,8 @@ add_new_registry (eventregistry_object **registryp, char *name)
 void
 gdbpy_initialize_py_events (void)
 {
-  gdb_py_events.module = Py_InitModule ("events", NULL);
+//  gdb_py_events.module = Py_InitModule ("events", NULL);
+    gdb_py_events.module = PyModule_Create (&moduledef); //"events", NULL);
 
   if (!gdb_py_events.module)
     goto fail;

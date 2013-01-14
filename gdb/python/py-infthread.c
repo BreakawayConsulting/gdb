@@ -77,7 +77,7 @@ thpy_get_name (PyObject *self, void *ignore)
   if (name == NULL)
     Py_RETURN_NONE;
 
-  return PyString_FromString (name);
+  return PyUnicode_FromString (name);
 }
 
 static int
@@ -94,7 +94,7 @@ thpy_set_name (PyObject *self, PyObject *newvalue, void *ignore)
 
   if (newvalue == NULL)
     {
-      PyErr_SetString (PyExc_TypeError, 
+      PyErr_SetString (PyExc_TypeError,
 		       _("Cannot delete `name' attribute."));
       return -1;
     }
@@ -149,9 +149,9 @@ thpy_get_ptid (PyObject *self, void *closure)
   lwp = ptid_get_lwp (thread_obj->thread->ptid);
   tid = ptid_get_tid (thread_obj->thread->ptid);
 
-  PyTuple_SET_ITEM (ret, 0, PyInt_FromLong (pid));
-  PyTuple_SET_ITEM (ret, 1, PyInt_FromLong (lwp));
-  PyTuple_SET_ITEM (ret, 2, PyInt_FromLong (tid));
+  PyTuple_SET_ITEM (ret, 0, PyLong_FromLong (pid));
+  PyTuple_SET_ITEM (ret, 1, PyLong_FromLong (lwp));
+  PyTuple_SET_ITEM (ret, 2, PyLong_FromLong (tid));
 
   return ret;
 }
@@ -301,8 +301,7 @@ Return whether the thread is exited." },
 
 static PyTypeObject thread_object_type =
 {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.InferiorThread",		  /*tp_name*/
   sizeof (thread_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/
@@ -321,7 +320,7 @@ static PyTypeObject thread_object_type =
   0,				  /*tp_getattro*/
   0,				  /*tp_setattro*/
   0,				  /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,  /*tp_flags*/
+  Py_TPFLAGS_DEFAULT,  /*tp_flags*/
   "GDB thread object",		  /* tp_doc */
   0,				  /* tp_traverse */
   0,				  /* tp_clear */

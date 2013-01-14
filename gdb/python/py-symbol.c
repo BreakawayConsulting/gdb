@@ -60,7 +60,7 @@ sympy_str (PyObject *self)
 
   SYMPY_REQUIRE_VALID (self, symbol);
 
-  result = PyString_FromString (SYMBOL_PRINT_NAME (symbol));
+  result = PyUnicode_FromString (SYMBOL_PRINT_NAME (symbol));
 
   return result;
 }
@@ -98,7 +98,7 @@ sympy_get_name (PyObject *self, void *closure)
 
   SYMPY_REQUIRE_VALID (self, symbol);
 
-  return PyString_FromString (SYMBOL_NATURAL_NAME (symbol));
+  return PyUnicode_FromString (SYMBOL_NATURAL_NAME (symbol));
 }
 
 static PyObject *
@@ -108,7 +108,7 @@ sympy_get_linkage_name (PyObject *self, void *closure)
 
   SYMPY_REQUIRE_VALID (self, symbol);
 
-  return PyString_FromString (SYMBOL_LINKAGE_NAME (symbol));
+  return PyUnicode_FromString (SYMBOL_LINKAGE_NAME (symbol));
 }
 
 static PyObject *
@@ -128,7 +128,7 @@ sympy_get_addr_class (PyObject *self, void *closure)
 
   SYMPY_REQUIRE_VALID (self, symbol);
 
-  return PyInt_FromLong (SYMBOL_CLASS (symbol));
+  return PyLong_FromLong (SYMBOL_CLASS (symbol));
 }
 
 static PyObject *
@@ -216,7 +216,7 @@ sympy_line (PyObject *self, void *closure)
 
   SYMPY_REQUIRE_VALID (self, symbol);
 
-  return PyInt_FromLong (SYMBOL_LINE (symbol));
+  return PyLong_FromLong (SYMBOL_LINE (symbol));
 }
 
 /* Implementation of gdb.Symbol.is_valid (self) -> Boolean.
@@ -270,7 +270,7 @@ sympy_value (PyObject *self, PyObject *args)
 	  if (frame_info == NULL)
 	    error (_("invalid frame"));
 	}
-      
+
       if (symbol_read_needs_frame (symbol) && frame_info == NULL)
 	error (_("symbol requires a frame to compute its value"));
 
@@ -561,8 +561,7 @@ Return the value of the symbol." },
 };
 
 PyTypeObject symbol_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Symbol",			  /*tp_name*/
   sizeof (symbol_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/

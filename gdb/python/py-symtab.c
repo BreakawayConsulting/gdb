@@ -91,7 +91,7 @@ stpy_str (PyObject *self)
 
   STPY_REQUIRE_VALID (self, symtab);
 
-  result = PyString_FromString (symtab->filename);
+  result = PyUnicode_FromString (symtab->filename);
 
   return result;
 }
@@ -104,7 +104,7 @@ stpy_get_filename (PyObject *self, void *closure)
 
   STPY_REQUIRE_VALID (self, symtab);
 
-  str_obj = PyString_Decode (symtab->filename,
+  str_obj = PyUnicode_Decode (symtab->filename,
 			     strlen (symtab->filename),
 			     host_charset (), NULL);
   return str_obj;
@@ -133,7 +133,7 @@ stpy_fullname (PyObject *self, PyObject *args)
 
   fullname = symtab_to_fullname (symtab);
   if (fullname)
-    return PyString_Decode (fullname, strlen (fullname),
+    return PyUnicode_Decode (fullname, strlen (fullname),
 			    host_charset (), NULL);
 
   Py_RETURN_NONE;
@@ -203,7 +203,7 @@ salpy_str (PyObject *self)
   s = xstrprintf ("symbol and line for %s, line %d", filename,
 		  sal->line);
 
-  result = PyString_FromString (s);
+  result = PyUnicode_FromString (s);
   xfree (s);
 
   return result;
@@ -260,7 +260,7 @@ salpy_get_line (PyObject *self, void *closure)
 
   SALPY_REQUIRE_VALID (self, sal);
 
-  return PyInt_FromLong (sal->line);
+  return PyLong_FromLong (sal->line);
 }
 
 static PyObject *
@@ -307,7 +307,7 @@ salpy_dealloc (PyObject *self)
 
   Py_DECREF (self_sal->symtab);
   xfree (self_sal->sal);
-  self_sal->ob_type->tp_free (self);
+  Py_TYPE(self_sal)->tp_free (self);
 }
 
 /* Given a sal, and a sal_object that has previously been allocated
@@ -536,8 +536,7 @@ Return the static block of the symbol table." },
 };
 
 static PyTypeObject symtab_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Symtab",			  /*tp_name*/
   sizeof (symtab_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/
@@ -587,8 +586,7 @@ Return true if this symbol table and line is valid, false if not." },
 };
 
 static PyTypeObject sal_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Symtab_and_line",	  /*tp_name*/
   sizeof (sal_object),		  /*tp_basicsize*/
   0,				  /*tp_itemsize*/

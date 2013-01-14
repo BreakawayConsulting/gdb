@@ -121,7 +121,7 @@ find_pretty_printer_from_objfiles (PyObject *value)
 
     if (function != Py_None)
       return function;
-    
+
     Py_DECREF (function);
   }
 
@@ -223,7 +223,7 @@ pretty_print_one_value (PyObject *printer, struct value **out_value)
       result = PyObject_CallMethodObjArgs (printer, gdbpy_to_string_cst, NULL);
       if (result)
 	{
-	  if (! gdbpy_is_string (result) && ! gdbpy_is_lazy_string (result)  
+	  if (! gdbpy_is_string (result) && ! gdbpy_is_lazy_string (result)
 	      && result != Py_None)
 	    {
 	      *out_value = convert_value_from_python (result);
@@ -342,13 +342,16 @@ print_string_repr (PyObject *printer, const char *hint,
 	  string = python_string_to_target_python_string (py_str);
 	  if (string)
 	    {
-	      gdb_byte *output;
+	      const gdb_byte *output;
 	      long length;
 	      struct type *type;
 
 	      make_cleanup_py_decref (string);
-	      output = PyString_AsString (string);
-	      length = PyString_Size (string);
+	      /* FIXME: I'm not sure if this is really a good approach!
+		 Probably want to encode correctly.
+	       */
+	      output = PyUnicode_AS_DATA (string);
+	      length = PyUnicode_GET_SIZE (string);
 	      type = builtin_type (gdbarch)->builtin_char;
 
 	      if (hint && !strcmp (hint, "string"))
@@ -401,7 +404,7 @@ push_dummy_python_frame (void)
   PyFrameObject *frame;
   PyThreadState *tstate;
 
-  empty_string = PyString_FromString ("");
+  empty_string = PyUnicode_FromString ("");
   if (!empty_string)
     return NULL;
 
@@ -413,6 +416,7 @@ push_dummy_python_frame (void)
     }
 
   code = PyCode_New (0,			/* argcount */
+		     0,                 /* kwonlyargcount */
 		     0,			/* nlocals */
 		     0,			/* stacksize */
 		     0,			/* flags */
@@ -535,7 +539,7 @@ print_children (PyObject *printer, const char *hint,
 	    print_stack_unless_memory_error (stream);
 	  /* Set a flag so we can know whether we printed all the
 	     available elements.  */
-	  else	  
+	  else
 	    done_flag = 1;
 	  break;
 	}
@@ -714,7 +718,7 @@ apply_val_pretty_printer (struct type *type, const gdb_byte *valaddr,
   val_obj = value_to_value_object (value);
   if (! val_obj)
     goto done;
-  
+
   /* Find the constructor.  */
   printer = find_pretty_printer (val_obj);
   Py_DECREF (val_obj);
@@ -771,7 +775,7 @@ apply_varobj_pretty_printer (PyObject *printer_obj,
 
 /* Find a pretty-printer object for the varobj module.  Returns a new
    reference to the object if successful; returns NULL if not.  VALUE
-   is the value for which a printer tests to determine if it 
+   is the value for which a printer tests to determine if it
    can pretty-print the value.  */
 PyObject *
 gdbpy_get_varobj_pretty_printer (struct value *value)
@@ -785,7 +789,7 @@ gdbpy_get_varobj_pretty_printer (struct value *value)
       value = value_copy (value);
     }
   GDB_PY_HANDLE_EXCEPTION (except);
-  
+
   val_obj = value_to_value_object (value);
   if (! val_obj)
     return NULL;
@@ -811,7 +815,7 @@ gdbpy_default_visualizer (PyObject *self, PyObject *args)
   value = value_object_to_value (val_obj);
   if (! value)
     {
-      PyErr_SetString (PyExc_TypeError, 
+      PyErr_SetString (PyExc_TypeError,
 		       _("Argument must be a gdb.Value."));
       return NULL;
     }

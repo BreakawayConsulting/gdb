@@ -70,8 +70,8 @@ python_string_to_unicode (PyObject *obj)
       unicode_str = obj;
       Py_INCREF (obj);
     }
-  
-  else if (PyString_Check (obj))
+
+  else if (PyUnicode_Check (obj))
     unicode_str = PyUnicode_FromEncodedObject (obj, host_charset (), NULL);
   else
     {
@@ -99,7 +99,7 @@ unicode_to_encoded_string (PyObject *unicode_str, const char *charset)
   if (string == NULL)
     return NULL;
 
-  result = xstrdup (PyString_AsString (string));
+  result = xstrdup (PyUnicode_AS_DATA (string)); /* FIXME: ??? */
 
   Py_DECREF (string);
 
@@ -197,7 +197,7 @@ python_string_to_host_string (PyObject *obj)
   if (str == NULL)
     return NULL;
 
-  result = unicode_to_encoded_string (str, host_charset ()); 
+  result = unicode_to_encoded_string (str, host_charset ());
   Py_DECREF (str);
   return result;
 }
@@ -221,7 +221,7 @@ target_string_to_unicode (const gdb_byte *str, int length)
 int
 gdbpy_is_string (PyObject *obj)
 {
-  return PyString_Check (obj) || PyUnicode_Check (obj);
+  return PyUnicode_Check (obj);
 }
 
 /* Return the string representation of OBJ, i.e., str (obj).
@@ -235,7 +235,7 @@ gdbpy_obj_to_string (PyObject *obj)
 
   if (str_obj != NULL)
     {
-      char *msg = xstrdup (PyString_AsString (str_obj));
+	char *msg = xstrdup (PyUnicode_AS_DATA (str_obj)); /* FIXME */
 
       Py_DECREF (str_obj);
       return msg;
@@ -274,7 +274,7 @@ gdbpy_exception_to_string (PyObject *ptype, PyObject *pvalue)
 }
 
 /* Convert a GDB exception to the appropriate Python exception.
-   
+
    This sets the Python error indicator, and returns NULL.  */
 
 PyObject *
@@ -338,11 +338,11 @@ gdb_py_object_from_longest (LONGEST l)
 #ifdef HAVE_LONG_LONG		/* Defined by Python.  */
   /* If we have 'long long', and the value overflows a 'long', use a
      Python Long; otherwise use a Python Int.  */
-  if (sizeof (l) > sizeof (long)
-      && (l > PyInt_GetMax () || l < (- (LONGEST) PyInt_GetMax ()) - 1))
+//  if (sizeof (l) > sizeof (long)
+//      && (l > PyLong_GetMax () || l < (- (LONGEST) PyLong_GetMax ()) - 1))
     return PyLong_FromLongLong (l);
 #endif
-  return PyInt_FromLong (l);
+//  return PyLong_FromLong (l);
 }
 
 /* Convert a ULONGEST to the appropriate Python object -- either an
@@ -354,14 +354,14 @@ gdb_py_object_from_ulongest (ULONGEST l)
 #ifdef HAVE_LONG_LONG		/* Defined by Python.  */
   /* If we have 'long long', and the value overflows a 'long', use a
      Python Long; otherwise use a Python Int.  */
-  if (sizeof (l) > sizeof (unsigned long) && l > PyInt_GetMax ())
+//  if (sizeof (l) > sizeof (unsigned long) && l > PyLong_GetMax ())
     return PyLong_FromUnsignedLongLong (l);
 #endif
 
-  if (l > PyInt_GetMax ())
-    return PyLong_FromUnsignedLong (l);
+//  if (l > PyLong_GetMax ())
+//    return PyLong_FromUnsignedLong (l);
 
-  return PyInt_FromLong (l);
+//  return PyLong_FromLong (l);
 }
 
 /* Like PyInt_AsLong, but returns 0 on failure, 1 on success, and puts
@@ -370,7 +370,7 @@ gdb_py_object_from_ulongest (ULONGEST l)
 int
 gdb_py_int_as_long (PyObject *obj, long *result)
 {
-  *result = PyInt_AsLong (obj);
+  *result = PyLong_AsLong (obj);
   return ! (*result == -1 && PyErr_Occurred ());
 }
 

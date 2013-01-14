@@ -66,7 +66,7 @@ stpy_get_encoding (PyObject *self, void *closure)
   /* An encoding can be set to NULL by the user, so check before
      attempting a Python FromString call.  If NULL return Py_None.  */
   if (self_string->encoding)
-    result = PyString_FromString (self_string->encoding);
+    result = PyUnicode_FromString (self_string->encoding);
   else
     {
       result = Py_None;
@@ -216,8 +216,7 @@ static PyGetSetDef lazy_string_object_getset[] = {
 };
 
 static PyTypeObject lazy_string_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.LazyString",	          /*tp_name*/
   sizeof (lazy_string_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/

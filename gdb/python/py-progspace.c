@@ -54,7 +54,7 @@ pspy_get_filename (PyObject *self, void *closure)
       struct objfile *objfile = obj->pspace->symfile_object_file;
 
       if (objfile)
-	return PyString_Decode (objfile->name, strlen (objfile->name),
+	return PyUnicode_Decode (objfile->name, strlen (objfile->name),
 				host_charset (), NULL);
     }
   Py_RETURN_NONE;
@@ -202,8 +202,7 @@ static PyGetSetDef pspace_getset[] =
 
 static PyTypeObject pspace_object_type =
 {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Progspace",		  /*tp_name*/
   sizeof (pspace_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/

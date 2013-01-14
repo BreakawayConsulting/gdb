@@ -61,7 +61,7 @@ typedef struct {
 struct frame_info *
 frame_object_to_frame_info (PyObject *obj)
 {
-  frame_object *frame_obj = (frame_object *) obj;  
+  frame_object *frame_obj = (frame_object *) obj;
   struct frame_info *frame;
 
   frame = frame_find_by_id (frame_obj->frame_id);
@@ -87,7 +87,7 @@ frapy_str (PyObject *self)
   strfile = mem_fileopen ();
   fprint_frame_id (strfile, ((frame_object *) self)->frame_id);
   s = ui_file_xstrdup (strfile, NULL);
-  result = PyString_FromString (s);
+  result = PyUnicode_FromString (s);
   xfree (s);
 
   return result;
@@ -164,7 +164,7 @@ frapy_type (PyObject *self, PyObject *args)
     }
   GDB_PY_HANDLE_EXCEPTION (except);
 
-  return PyInt_FromLong (type);
+  return PyLong_FromLong (type);
 }
 
 /* Implementation of gdb.Frame.unwind_stop_reason (self) -> Integer.
@@ -185,7 +185,7 @@ frapy_unwind_stop_reason (PyObject *self, PyObject *args)
 
   stop_reason = get_frame_unwind_stop_reason (frame);
 
-  return PyInt_FromLong (stop_reason);
+  return PyLong_FromLong (stop_reason);
 }
 
 /* Implementation of gdb.Frame.pc (self) -> Long.
@@ -286,7 +286,7 @@ frame_info_to_frame_object (struct frame_info *frame)
   frame_obj = PyObject_New (frame_object, &frame_object_type);
   if (frame_obj == NULL)
     {
-      PyErr_SetString (PyExc_MemoryError, 
+      PyErr_SetString (PyExc_MemoryError,
 		       _("Could not allocate frame object."));
       return NULL;
     }
@@ -553,7 +553,7 @@ gdbpy_frame_stop_reason_string (PyObject *self, PyObject *args)
 
   if (reason < UNWIND_FIRST || reason > UNWIND_LAST)
     {
-      PyErr_SetString (PyExc_ValueError, 
+      PyErr_SetString (PyExc_ValueError,
 		       _("Invalid frame stop reason."));
       return NULL;
     }
@@ -662,8 +662,7 @@ Return the value of the variable in this frame." },
 };
 
 PyTypeObject frame_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /* ob_size */
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Frame",			  /* tp_name */
   sizeof (frame_object),	  /* tp_basicsize */
   0,				  /* tp_itemsize */

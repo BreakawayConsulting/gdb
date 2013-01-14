@@ -35,7 +35,7 @@ create_signal_event_object (enum gdb_signal stop_signal)
 
   if (evpy_add_attribute (signal_event_obj,
                           "stop_signal",
-                          PyString_FromString (signal_name)) < 0)
+                          PyUnicode_FromString (signal_name)) < 0)
     goto fail;
 
   return signal_event_obj;

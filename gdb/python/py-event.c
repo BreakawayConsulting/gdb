@@ -141,8 +141,7 @@ static PyGetSetDef event_object_getset[] =
 
 PyTypeObject event_object_type =
 {
-  PyObject_HEAD_INIT (NULL)
-  0,                                          /* ob_size */
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Event",                                /* tp_name */
   sizeof (event_object),                      /* tp_basicsize */
   0,                                          /* tp_itemsize */

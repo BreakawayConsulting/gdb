@@ -106,7 +106,7 @@ valpy_dealloc (PyObject *obj)
 
   Py_XDECREF (self->dynamic_type);
 
-  self->ob_type->tp_free (self);
+  Py_TYPE(self)->tp_free (self);
 }
 
 /* Helper to push a Value object on the global list.  */
@@ -443,7 +443,7 @@ valpy_do_cast (PyObject *self, PyObject *args, enum exp_opcode op)
   type = type_object_to_type (type_obj);
   if (! type)
     {
-      PyErr_SetString (PyExc_RuntimeError, 
+      PyErr_SetString (PyExc_RuntimeError,
 		       _("Argument must be a type."));
       return NULL;
     }
@@ -516,7 +516,7 @@ valpy_getitem (PyObject *self, PyObject *key)
   PyObject *result = NULL;
 
   if (gdbpy_is_string (key))
-    {  
+    {
       field = python_string_to_host_string (key);
       if (field == NULL)
 	return NULL;
@@ -729,7 +729,7 @@ valpy_fetch_lazy (PyObject *self, PyObject *args)
 
 /* Calculate and return the address of the PyObject as the value of
    the builtin __hash__ call.  */
-static long 
+static long
 valpy_hash (PyObject *self)
 {
   return (long) (intptr_t) self;
@@ -1257,15 +1257,15 @@ convert_value_from_python (PyObject *obj)
 
   TRY_CATCH (except, RETURN_MASK_ALL)
     {
-      if (PyBool_Check (obj)) 
+      if (PyBool_Check (obj))
 	{
 	  cmp = PyObject_IsTrue (obj);
 	  if (cmp >= 0)
 	    value = value_from_longest (builtin_type_pybool, cmp);
 	}
-      else if (PyInt_Check (obj))
+      else if (PyLong_Check (obj))
 	{
-	  long l = PyInt_AsLong (obj);
+	  long l = PyLong_AsLong (obj);
 
 	  if (! PyErr_Occurred ())
 	    value = value_from_longest (builtin_type_pyint, l);
@@ -1283,7 +1283,7 @@ convert_value_from_python (PyObject *obj)
 		  PyObject *etype, *evalue, *etraceback, *zero;
 
 		  PyErr_Fetch (&etype, &evalue, &etraceback);
-		  zero = PyInt_FromLong (0);
+		  zero = PyLong_FromLong (0);
 
 		  /* Check whether obj is positive.  */
 		  if (PyObject_RichCompareBool (obj, zero, Py_GT) > 0)
@@ -1336,8 +1336,8 @@ convert_value_from_python (PyObject *obj)
 	}
       else
 	PyErr_Format (PyExc_TypeError,
-		      _("Could not convert Python object: %s."),
-		      PyString_AsString (PyObject_Str (obj)));
+		      _("Could not convert Python object:.")); /* FIXME */
+//		      (PyUnicode_Object (obj)));
     }
   if (except.reason < 0)
     {
@@ -1430,7 +1430,7 @@ Return a lazy string representation of the value." },
   { "string", (PyCFunction) valpy_string, METH_VARARGS | METH_KEYWORDS,
     "string ([encoding] [, errors] [, length]) -> string\n\
 Return Unicode string representation of the value." },
-  { "fetch_lazy", valpy_fetch_lazy, METH_NOARGS, 
+  { "fetch_lazy", valpy_fetch_lazy, METH_NOARGS,
     "Fetches the value from the inferior, if it was lazy." },
   {NULL}  /* Sentinel */
 };
@@ -1439,13 +1439,14 @@ static PyNumberMethods value_object_as_number = {
   valpy_add,
   valpy_subtract,
   valpy_multiply,
-  valpy_divide,
   valpy_remainder,
   NULL,			      /* nb_divmod */
+
   valpy_power,		      /* nb_power */
   valpy_negative,	      /* nb_negative */
   valpy_positive,	      /* nb_positive */
   valpy_absolute,	      /* nb_absolute */
+
   valpy_nonzero,	      /* nb_nonzero */
   valpy_invert,		      /* nb_invert */
   valpy_lsh,		      /* nb_lshift */
@@ -1453,12 +1454,9 @@ static PyNumberMethods value_object_as_number = {
   valpy_and,		      /* nb_and */
   valpy_xor,		      /* nb_xor */
   valpy_or,		      /* nb_or */
-  NULL,			      /* nb_coerce */
-  valpy_int,		      /* nb_int */
   valpy_long,		      /* nb_long */
+  NULL,			      /* reserverd */
   valpy_float,		      /* nb_float */
-  NULL,			      /* nb_oct */
-  NULL			      /* nb_hex */
 };
 
 static PyMappingMethods value_object_as_mapping = {
@@ -1468,8 +1466,7 @@ static PyMappingMethods value_object_as_mapping = {
 };
 
 PyTypeObject value_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Value",			  /*tp_name*/
   sizeof (value_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/
@@ -1488,7 +1485,7 @@ PyTypeObject value_object_type = {
   0,				  /*tp_getattro*/
   0,				  /*tp_setattro*/
   0,				  /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES
+  Py_TPFLAGS_DEFAULT
   | Py_TPFLAGS_BASETYPE,	  /*tp_flags*/
   "GDB value object",		  /* tp_doc */
   0,				  /* tp_traverse */

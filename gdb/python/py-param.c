@@ -101,8 +101,8 @@ static PyObject *show_doc_cst;
 static PyObject *
 get_attr (PyObject *obj, PyObject *attr_name)
 {
-  if (PyString_Check (attr_name)
-      && ! strcmp (PyString_AsString (attr_name), "value"))
+  if (PyUnicode_Check (attr_name)
+      && ! strcmp (PyUnicode_AS_DATA (attr_name), "value")) /* FIXME!! */
     {
       parmpy_object *self = (parmpy_object *) obj;
 
@@ -129,7 +129,7 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 	  && (self->type == var_filename
 	      || value != Py_None))
 	{
-	  PyErr_SetString (PyExc_RuntimeError, 
+	  PyErr_SetString (PyExc_RuntimeError,
 			   _("String required for filename."));
 
 	  return -1;
@@ -162,7 +162,7 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 
 	if (! gdbpy_is_string (value))
 	  {
-	    PyErr_SetString (PyExc_RuntimeError, 
+	    PyErr_SetString (PyExc_RuntimeError,
 			     _("ENUM arguments must be a string."));
 	    return -1;
 	  }
@@ -187,12 +187,12 @@ set_parameter_value (parmpy_object *self, PyObject *value)
     case var_boolean:
       if (! PyBool_Check (value))
 	{
-	  PyErr_SetString (PyExc_RuntimeError, 
+	  PyErr_SetString (PyExc_RuntimeError,
 			   _("A boolean argument is required."));
 	  return -1;
 	}
       cmp = PyObject_IsTrue (value);
-      if (cmp < 0) 
+      if (cmp < 0)
 	  return -1;
       self->value.intval = cmp;
       break;
@@ -211,10 +211,10 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 	{
 	  cmp = PyObject_IsTrue (value);
 	  if (cmp < 0 )
-	    return -1;	  
+	    return -1;
 	  if (cmp == 1)
 	    self->value.autoboolval = AUTO_BOOLEAN_TRUE;
-	  else 
+	  else
 	    self->value.autoboolval = AUTO_BOOLEAN_FALSE;
 	}
       break;
@@ -226,9 +226,9 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 	long l;
 	int ok;
 
-	if (! PyInt_Check (value))
+	if (! PyLong_Check (value))
 	  {
-	    PyErr_SetString (PyExc_RuntimeError, 
+	    PyErr_SetString (PyExc_RuntimeError,
 			     _("The value must be integer."));
 	    return -1;
 	  }
@@ -253,7 +253,7 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 
 	if (! ok)
 	  {
-	    PyErr_SetString (PyExc_RuntimeError, 
+	    PyErr_SetString (PyExc_RuntimeError,
 			     _("Range exceeded."));
 	    return -1;
 	  }
@@ -263,7 +263,7 @@ set_parameter_value (parmpy_object *self, PyObject *value)
       }
 
     default:
-      PyErr_SetString (PyExc_RuntimeError, 
+      PyErr_SetString (PyExc_RuntimeError,
 		       _("Unhandled type in parameter value."));
       return -1;
     }
@@ -275,8 +275,8 @@ set_parameter_value (parmpy_object *self, PyObject *value)
 static int
 set_attr (PyObject *obj, PyObject *attr_name, PyObject *val)
 {
-  if (PyString_Check (attr_name)
-      && ! strcmp (PyString_AsString (attr_name), "value"))
+  if (PyUnicode_Check (attr_name)
+      && ! strcmp (PyUnicode_AS_DATA (attr_name), "value")) /* FIXME: Maybe should decode? */
     {
       if (!val)
 	{
@@ -360,7 +360,7 @@ get_set_value (char *args, int from_tty,
   char *set_doc_string;
   struct cleanup *cleanup = ensure_python_env (get_current_arch (),
 					       current_language);
-  PyObject *set_doc_func = PyString_FromString ("get_set_string");
+  PyObject *set_doc_func = PyUnicode_FromString ("get_set_string");
 
   if (! set_doc_func)
     goto error;
@@ -408,7 +408,7 @@ get_show_value (struct ui_file *file, int from_tty,
   char *show_doc_string = NULL;
   struct cleanup *cleanup = ensure_python_env (get_current_arch (),
 					       current_language);
-  PyObject *show_doc_func = PyString_FromString ("get_show_string");
+  PyObject *show_doc_func = PyUnicode_FromString ("get_show_string");
 
   if (! show_doc_func)
     goto error;
@@ -417,7 +417,7 @@ get_show_value (struct ui_file *file, int from_tty,
 
   if (PyObject_HasAttr (obj, show_doc_func))
     {
-      PyObject *val_obj = PyString_FromString (value);
+      PyObject *val_obj = PyUnicode_FromString (value);
 
       if (! val_obj)
 	goto error;
@@ -572,7 +572,7 @@ compute_enum_values (parmpy_object *self, PyObject *enum_values)
 
   if (! PySequence_Check (enum_values))
     {
-      PyErr_SetString (PyExc_RuntimeError, 
+      PyErr_SetString (PyExc_RuntimeError,
 		       _("The enumeration is not a sequence."));
       return 0;
     }
@@ -582,7 +582,7 @@ compute_enum_values (parmpy_object *self, PyObject *enum_values)
     return 0;
   if (size == 0)
     {
-      PyErr_SetString (PyExc_RuntimeError, 
+      PyErr_SetString (PyExc_RuntimeError,
 		       _("The enumeration is empty."));
       return 0;
     }
@@ -603,7 +603,7 @@ compute_enum_values (parmpy_object *self, PyObject *enum_values)
       if (! gdbpy_is_string (item))
 	{
 	  do_cleanups (back_to);
-	  PyErr_SetString (PyExc_RuntimeError, 
+	  PyErr_SetString (PyExc_RuntimeError,
 			   _("The enumeration item not a string."));
 	  return 0;
 	}
@@ -749,10 +749,10 @@ gdbpy_initialize_parameters (void)
   if (PyType_Ready (&parmpy_object_type) < 0)
     return;
 
-  set_doc_cst = PyString_FromString ("set_doc");
+  set_doc_cst = PyUnicode_FromString ("set_doc");
   if (! set_doc_cst)
     return;
-  show_doc_cst = PyString_FromString ("show_doc");
+  show_doc_cst = PyUnicode_FromString ("show_doc");
   if (! show_doc_cst)
     return;
 
@@ -773,8 +773,7 @@ gdbpy_initialize_parameters (void)
 
 static PyTypeObject parmpy_object_type =
 {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Parameter",		  /*tp_name*/
   sizeof (parmpy_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/

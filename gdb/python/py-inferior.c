@@ -257,7 +257,7 @@ delete_thread_object (struct thread_info *tp, int ignore)
   struct cleanup *cleanup;
   inferior_object *inf_obj;
   struct threadlist_entry **entry, *tmp;
-  
+
   cleanup = ensure_python_env (python_gdbarch, python_language);
 
   inf_obj = (inferior_object *) find_inferior_object (PIDGET(tp->ptid));
@@ -449,8 +449,7 @@ infpy_read_memory (PyObject *self, PyObject *args, PyObject *kw)
   membuf_obj->addr = addr;
   membuf_obj->length = length;
 
-  result = PyBuffer_FromReadWriteObject ((PyObject *) membuf_obj, 0,
-					 Py_END_OF_BUFFER);
+  result = PyMemoryView_FromObject((PyObject *) membuf_obj);
   Py_DECREF (membuf_obj);
   return result;
 }
@@ -517,54 +516,20 @@ mbpy_str (PyObject *self)
 {
   membuf_object *membuf_obj = (membuf_object *) self;
 
-  return PyString_FromFormat (_("Memory buffer for address %s, \
+  return PyUnicode_FromFormat (_("Memory buffer for address %s, \
 which is %s bytes long."),
 			      paddress (python_gdbarch, membuf_obj->addr),
 			      pulongest (membuf_obj->length));
 }
 
-static Py_ssize_t
-get_read_buffer (PyObject *self, Py_ssize_t segment, void **ptrptr)
+//typedef int (*getbufferproc)(PyObject *, Py_buffer *, int);
+//typedef void (*releasebufferproc)(PyObject *, Py_buffer *);
+
+static int
+get_buffer (PyObject *exporter, Py_buffer *view, int flags)
 {
-  membuf_object *membuf_obj = (membuf_object *) self;
-
-  if (segment)
-    {
-      PyErr_SetString (PyExc_SystemError,
-		       _("The memory buffer supports only one segment."));
-      return -1;
-    }
-
-  *ptrptr = membuf_obj->buffer;
-
-  return membuf_obj->length;
-}
-
-static Py_ssize_t
-get_write_buffer (PyObject *self, Py_ssize_t segment, void **ptrptr)
-{
-  return get_read_buffer (self, segment, ptrptr);
-}
-
-static Py_ssize_t
-get_seg_count (PyObject *self, Py_ssize_t *lenp)
-{
-  if (lenp)
-    *lenp = ((membuf_object *) self)->length;
-
-  return 1;
-}
-
-static Py_ssize_t
-get_char_buffer (PyObject *self, Py_ssize_t segment, char **ptrptr)
-{
-  void *ptr = NULL;
-  Py_ssize_t ret;
-
-  ret = get_read_buffer (self, segment, &ptr);
-  *ptrptr = (char *) ptr;
-
-  return ret;
+  membuf_object *membuf_obj = (membuf_object *) exporter;
+  return PyBuffer_FillInfo(view, exporter, membuf_obj->buffer, membuf_obj->length, 0, flags);
 }
 
 /* Implementation of
@@ -772,8 +737,7 @@ Return a long with the address of a match, or None." },
 
 static PyTypeObject inferior_object_type =
 {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /* ob_size */
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Inferior",		  /* tp_name */
   sizeof (inferior_object),	  /* tp_basicsize */
   0,				  /* tp_itemsize */
@@ -792,7 +756,7 @@ static PyTypeObject inferior_object_type =
   0,				  /* tp_getattro */
   0,				  /* tp_setattro */
   0,				  /* tp_as_buffer */
-  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,  /* tp_flags */
+  Py_TPFLAGS_DEFAULT,  /* tp_flags */
   "GDB inferior object",	  /* tp_doc */
   0,				  /* tp_traverse */
   0,				  /* tp_clear */
@@ -812,25 +776,13 @@ static PyTypeObject inferior_object_type =
   0				  /* tp_alloc */
 };
 
-/* Python doesn't provide a decent way to get compatibility here.  */
-#if HAVE_LIBPYTHON2_4
-#define CHARBUFFERPROC_NAME getcharbufferproc
-#else
-#define CHARBUFFERPROC_NAME charbufferproc
-#endif
-
 static PyBufferProcs buffer_procs = {
-  get_read_buffer,
-  get_write_buffer,
-  get_seg_count,
-  /* The cast here works around a difference between Python 2.4 and
-     Python 2.5.  */
-  (CHARBUFFERPROC_NAME) get_char_buffer
+    get_buffer,
+    NULL /*release_buffer */
 };
 
 static PyTypeObject membuf_object_type = {
-  PyObject_HEAD_INIT (NULL)
-  0,				  /*ob_size*/
+    PyVarObject_HEAD_INIT (NULL, 0)
   "gdb.Membuf",			  /*tp_name*/
   sizeof (membuf_object),	  /*tp_basicsize*/
   0,				  /*tp_itemsize*/
