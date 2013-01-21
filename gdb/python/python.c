@@ -247,9 +247,7 @@ eval_python_from_control_command (struct command_line *cmd)
   cleanup = ensure_python_env (get_current_arch (), current_language);
 
   script = compute_python_string (cmd->body_list[0]);
-  printf("RUNNING PYTHON STRING: %s\n", script);
   ret = PyRun_SimpleString (script);
-  printf("RUN: %d\n", ret);
   xfree (script);
   if (ret)
     error (_("Error while executing Python code."));
@@ -274,9 +272,7 @@ python_command (char *arg, int from_tty)
   if (arg && *arg)
     {
 	int r;
-	printf("RUNNING PYTHON STRING: %s\n", arg);
 	r = PyRun_SimpleString (arg);
-	printf("RAN: %d\n", r);
       if (r)
 	error (_("Error while executing Python code."));
     }
@@ -1186,7 +1182,6 @@ struct _frozen *PyImport_FrozenModules = _PyImport_FrozenModules;
 PyMODINIT_FUNC
 PyInit_gdb(void)
 {
-  printf("PyInit_gdb called\n");
   gdb_module = PyModule_Create (&moduledef);
 
   /* The casts to (char*) are for python 2.4.  */
@@ -1320,22 +1315,8 @@ message == an error message without a stack will be printed."),
   Py_Initialize ();
   PyEval_InitThreads ();
 
-  printf("%s:%d\n", __FILE__, __LINE__);
-  PyRun_SimpleString ("print(23)");
-  PyRun_SimpleString ("print(23)");
-  printf("%s:%d\n", __FILE__, __LINE__);
-  PyRun_SimpleString ("import sys");
-  printf("%s:%d\n", __FILE__, __LINE__);
-  PyRun_SimpleString ("print(sys)");
-  PyRun_SimpleString ("print(sys.path)");
-  PyRun_SimpleString ("print(sys.modules)");
-  printf("%s:%d\n", __FILE__, __LINE__);
   PyRun_SimpleString ("import gdb");
-  printf("%s:%d\n", __FILE__, __LINE__);
-  PyRun_SimpleString ("print(gdb)");
-  printf("%s:%d\n", __FILE__, __LINE__);
   PyRun_SimpleString ("gdb.pretty_printers = []");
-  printf("%s:%d\n", __FILE__, __LINE__);
   gdbpy_to_string_cst = PyUnicode_FromString ("to_string");
   gdbpy_children_cst = PyUnicode_FromString ("children");
   gdbpy_display_hint_cst = PyUnicode_FromString ("display_hint");
@@ -1343,10 +1324,8 @@ message == an error message without a stack will be printed."),
   gdbpy_enabled_cst = PyUnicode_FromString ("enabled");
   gdbpy_value_cst = PyUnicode_FromString ("value");
 
-  printf("%s:%d\n", __FILE__, __LINE__);
   /* Release the GIL while gdb runs.  */
   PyThreadState_Swap (NULL);
-  printf("%s:%d\n", __FILE__, __LINE__);
   PyEval_ReleaseLock ();
 
 #endif /* HAVE_PYTHON */
@@ -1365,7 +1344,6 @@ finish_python_initialization (void)
   struct cleanup *cleanup;
 
   cleanup = ensure_python_env (get_current_arch (), current_language);
-  printf("finish python initialization\n");
   PyRun_SimpleString ("\
 print('Running')\n\
 import os\n\
